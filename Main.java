@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.IOException;
 
 class Automobile {
     private String make;
@@ -7,6 +10,14 @@ class Automobile {
     private String color;
     private int year;
     private int mileage;
+
+    public Automobile() {
+        this.make = "Unknown";
+        this.model = "Unknown";
+        this.color = "Unknown";
+        this.year = 0;
+        this.mileage = 0;
+    }
 
     public Automobile(String make, String model, String color, int year, int mileage) {
         this.make = make;
@@ -41,6 +52,25 @@ public class Main {
 
         System.out.println("\nNew Vehicle Info:");
         listVehicle().forEach(System.out::println);
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("\nDo you want to print the vehicle information to a file? (Y or N): ");
+        String input = scanner.nextLine();
+
+        if (input.equalsIgnoreCase("Y")) {
+            try {
+                FileWriter writer = new FileWriter("Autos.txt");
+                for (String vehicleInfo : listVehicle()) {
+                    writer.write(vehicleInfo + "\n");
+                }
+                writer.close();
+                System.out.println("Vehicle information written to file successfully.");
+            } catch (IOException e) {
+                System.out.println("An error occurred while writing to file: " + e.getMessage());
+            }
+        } else {
+            System.out.println("File will not be printed.");
+        }
     }
 
     public static String addVehicle(String make, String model, String color, int year, int mileage) {
@@ -49,13 +79,18 @@ public class Main {
     }
 
     public static String removeVehicle(String make, String model, String color, int year, int mileage) {
-        return inventory.removeIf(car ->
+        try {
+            boolean removed = inventory.removeIf(car ->
                 car.getMake().equals(make)
                 && car.getModel().equals(model)
                 && car.getColor().equals(color)
                 && car.getYear() == year
                 && car.getMileage() == mileage
-        ) ? "Vehicle removed successfully." : "No matching vehicle found to remove.";
+            );
+            return removed ? "Vehicle removed successfully." : "No matching vehicle found to remove.";
+        } catch (Exception e) {
+            return "Failed to remove vehicle: " + e.getMessage();
+        }
     }
 
     public static List<String> listVehicle() {
@@ -65,5 +100,26 @@ public class Main {
         return inventory.stream()
                 .map(Automobile::getInfo)
                 .toList();
+    }
+
+    public static String updateVehicle(String oldMake, String oldModel, String oldColor, int oldYear, int oldMileage,
+                                       String newMake, String newModel, String newColor, int newYear, int newMileage) {
+        try {
+            for (Automobile car : inventory) {
+                if (car.getMake().equals(oldMake)
+                    && car.getModel().equals(oldModel)
+                    && car.getColor().equals(oldColor)
+                    && car.getYear() == oldYear
+                    && car.getMileage() == oldMileage) {
+
+                    inventory.remove(car);
+                    inventory.add(new Automobile(newMake, newModel, newColor, newYear, newMileage));
+                    return "Vehicle updated successfully.";
+                }
+            }
+            return "No matching vehicle found to update.";
+        } catch (Exception e) {
+            return "Failed to update vehicle: " + e.getMessage();
+        }
     }
 }
